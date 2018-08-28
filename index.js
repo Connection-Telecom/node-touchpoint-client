@@ -162,7 +162,7 @@ module.exports = {
           }
         }
 
-        return resolve({ available: 'false' });
+        return resolve({ available: false });
       });
     });
   }
