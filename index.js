@@ -4,6 +4,8 @@
 const EventEmitter = require('events');
 const WebSocket = require('ws');
 const request = require('request');
+const HttpsProxyAgent = require('https-proxy-agent');
+const url = require('url');
 const Asteroid = require('asteroid').createClass();
 
 class TouchpointError extends Error {
@@ -25,7 +27,8 @@ class Chat extends EventEmitter {
       signedContext: null,
       signature: null,
       unsignedContext: null,
-      url: 'wss://touchpoint.telviva.com/websocket'
+      url: 'wss://touchpoint.telviva.com/websocket',
+      proxy: null
     }, options);
 
     if (typeof options.customerId !== 'string') {
@@ -44,9 +47,24 @@ class Chat extends EventEmitter {
     this._agentIsTyping = false;
     this._agentId = null;
 
+    let SocketConstructor;
+    if (options.proxy == null) {
+      SocketConstructor = WebSocket;
+    } else {
+      SocketConstructor = class extends WebSocket {
+        constructor(address, protocols) {
+          if (protocols == null) {
+            super(address, { agent: new HttpsProxyAgent(url.parse(options.proxy)) });
+          } else {
+            super(address, protocols, { agent: new HttpsProxyAgent(url.parse(options.proxy)) });
+          }
+        }
+      };
+    }
+
     this._ddp = new Asteroid({
       endpoint: options.url,
-      SocketConstructor: WebSocket,
+      SocketConstructor: SocketConstructor,
       autoReconnect: false
     });
 
@@ -134,7 +152,7 @@ class Chat extends EventEmitter {
 module.exports = {
   createChat: (options) => new Chat(options),
 
-  isAvailable(customerId, team, url) {
+  isAvailable(customerId, team, url, proxy) {
     if (url == null) {
       url = 'https://touchpoint.telviva.com/';
     }
@@ -146,7 +164,8 @@ module.exports = {
     return new Promise((resolve, reject) => {
       request({
         uri: url + 'api/customers/' + encodeURIComponent(customerId) + '/teams/' + encodeURIComponent(team) + '/channels',
-        json: true
+        json: true,
+        proxy: proxy
       }, (err, result) => {
         if (err != null) {
           return reject(err);

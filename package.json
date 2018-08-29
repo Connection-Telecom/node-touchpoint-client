@@ -1,6 +1,6 @@
 {
   "name": "touchpoint-client",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Library for acting as a Telviva Touchpoint user",
   "main": "index.js",
   "scripts": {
@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "asteroid": "^2.0.3",
+    "https-proxy-agent": "^2.2.1",
     "request": "^2.88.0",
     "ws": "^6.0.0"
   },

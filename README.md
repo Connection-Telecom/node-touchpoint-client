@@ -33,6 +33,7 @@ Check if a team is available (i.e. has logged-in text agents who are not paused)
 * `customerId` *string required*: ID of the customer to check
 * `team` *string*: Name of the team to check, `default` if unspecified
 * `url` *string*: URL of the Touchpoint server, including the trailing `/`. `https://touchpoint.telviva.com/` if unspecified
+* `proxy` *string*: URL of an HTTP proxy to use, if needed
 
 #### Returns
 
@@ -51,6 +52,7 @@ Create a new chat client.
 * `options.signature` *string*: base64-encoded signature of the signed context, if necessary
 * `options.unsignedContext` *string|object*: JSON object containing the unsigned context fields, if necessary
 * `options.url` *string*: URL of the Touchpoint websocket. `wss://touchpoint.telviva.com/websocket` if unspecified
+* `options.proxy` *string*: URL of an HTTP proxy to use, if needed. Be warned that some HTTP proxies may not correctly support Websockets.
 
 #### Returns
 
