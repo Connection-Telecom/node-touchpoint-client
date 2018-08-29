@@ -24,7 +24,7 @@ Also see [node-touchpoint-client-sample](https://github.com/Connection-Telecom/n
 
 ## API
 
-### touchpoint.isAvailable(customerId[, team[, url]])
+### touchpoint.isAvailable(customerId[, team[, url[, proxy]]])
 
 Check if a team is available (i.e. has logged-in text agents who are not paused).
 
