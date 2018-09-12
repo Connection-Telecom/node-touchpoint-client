@@ -113,7 +113,7 @@ Promise which resolves to `undefined` once the status was set.
 
 ### client.close()
 
-Close the chat and tear down the Websocket connection. Returns nothing. Will automatically
+Close the client and tear down the Websocket connection. Returns nothing. Will automatically
 close all unclosed chats.
 
 ## Chat events
@@ -121,8 +121,8 @@ close all unclosed chats.
 * `error`: emitted with an `Error` if an error occurs. If the error related to one chat,
   the chat ID is also included. If there is no chat ID, the error is a fatal error 
   which also closes the client.
-* `message`: When one of the chats you created receives a message, this is emitted.
-  emitted with a message object sent by the agent or by Touchpoint itself, and the chat ID.
+* `message`: When one of the chats you created receives a message, this is emitted 
+  with a message object sent by the agent or by Touchpoint itself, and the chat ID.
   The message object will always have two fields `type` and `message`, and may have more.
   `type` is `agentMsg` for a message sent by the agent; all other types are messages sent by the system.
 * `chatReady`: emitted with a chat ID once that chat has finished initializing.
