@@ -14,7 +14,7 @@ Allows you to act as a Touchpoint user from a node server. Currently only text c
     client.on('message', (msg, chatId) => {
       console.log(msg);
     });
-    touchpoint.createChat({customerId: 'tDNRFKYYtyrAnhais', topic: 'test chat'}).then(chatId => {
+    client.createChat({customerId: 'tDNRFKYYtyrAnhais', topic: 'test chat'}).then(chatId => {
       client.sendMessage('Hello there!', chatId).catch(err => {
         console.log('Error occurred while sending message');
       });
