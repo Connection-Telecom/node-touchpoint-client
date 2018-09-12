@@ -18,34 +18,13 @@ class TouchpointError extends Error {
   }
 }
 
-class Chat extends EventEmitter {
+class Client extends EventEmitter {
   constructor(options) {
     super();
     options = Object.assign({
-      topic: '<no topic>',
-      team: 'default',
-      signedContext: null,
-      signature: null,
-      unsignedContext: null,
       url: 'wss://touchpoint.telviva.com/websocket',
       proxy: null
     }, options);
-
-    if (typeof options.customerId !== 'string') {
-      throw new Error('customerId must be a string');
-    }
-
-    if (typeof options.unsignedContext === 'object') {
-      options.unsignedContext = JSON.stringify(options.unsignedContext);
-    }
-
-    if (options.signedContext != null && typeof options.signedContext !== 'string') {
-      throw new Error('signedContext must be a string, if present');
-    }
-
-    this._closed = false;
-    this._agentIsTyping = false;
-    this._agentId = null;
 
     let SocketConstructor;
     if (options.proxy == null) {
@@ -68,6 +47,8 @@ class Chat extends EventEmitter {
       autoReconnect: false
     });
 
+    this._closed = false;
+
     this._expectedDisconnect = false;
     this._ddp.ddp.on('disconnected', () => {
       if (!this._expectedDisconnect) {
@@ -78,67 +59,103 @@ class Chat extends EventEmitter {
 
     this._ddp.ddp.on('added', message => {
       if (message.collection === 'chats') {
-        this._chatUpdated(message.fields);
+        this._chatUpdated(message.fields, message.id);
       } else if (message.collection === 'messages') {
-        this.emit('message', message.fields);
+        this.emit('message', message.fields, message.fields.chatId);
       }
     });
     this._ddp.ddp.on('changed', message => {
       if (message.collection === 'chats') {
-        this._chatUpdated(message.fields);
+        this._chatUpdated(message.fields, message.id);
       }
     });
 
-    this._ddp.call(
+    this._subIds = {};
+  }
+
+  createChat(options) {
+    if (this._closed) {
+      return Promise.reject(Error('client was already closed'));
+    }
+
+    options = Object.assign({
+      topic: '<no topic>',
+      team: 'default',
+      signedContext: null,
+      signature: null,
+      unsignedContext: null,
+    }, options);
+
+    if (typeof options.customerId !== 'string') {
+      throw new Error('customerId must be a string');
+    }
+
+    if (typeof options.unsignedContext === 'object') {
+      options.unsignedContext = JSON.stringify(options.unsignedContext);
+    }
+
+    if (options.signedContext != null && typeof options.signedContext !== 'string') {
+      throw new Error('signedContext must be a string, if present');
+    }
+
+    return this._ddp.call(
       'createChat', options.customerId, options.topic, options.team, 'text', options.signedContext, options.signature, options.unsignedContext
     ).then(id => {
-      this._chatId = id;
-      this._ddp.subscribe('userChat', id).on('ready', () => {
-        this.emit('ready');
+      const sub = this._ddp.subscribe('userChat', id, true);
+      sub.on('ready', () => {
+        this.emit('chatReady', id);
       }).on('error', error => {
-        this.emit('error', error);
-        this.close();
+        this.emit('error', error, id);
+        delete this._subIds[id];
       });
+      this._subIds[id] = sub.id;
 
-    }).catch(err => {
-      this.emit('error', err);
-      this.close();
+      return id;
     });
   }
 
-  _chatUpdated(chat) {
+  closeChat(chatId) {
+    if (!this._subIds.hasOwnProperty(chatId)) {
+      return Promise.reject(`unknown chat: ${chatId}. it might already have been closed or it was never created`);
+    }
+    this._unsub(chatId);
+    return this._ddp.call('userCloseChat', chatId);
+  }
+
+  _unsub(chatId) {
+    if (this._subIds.hasOwnProperty(chatId)) {
+      this._ddp.unsubscribe(this._subIds[chatId]);
+      delete this._subIds[chatId];
+    }
+  }
+
+  _chatUpdated(chat, chatId) {
     if (chat.hasOwnProperty('agentIsTyping')) {
-      this.emit('agentIsTyping', { agentIsTyping: chat.agentIsTyping });
+      this.emit('agentIsTyping', { agentIsTyping: chat.agentIsTyping }, chatId);
     }
 
     if (chat.hasOwnProperty('agentId')) {
-      this.emit('agentId', { agentId: chat.agentId });
+      this.emit('agentId', { agentId: chat.agentId }, chatId);
     }
 
     if (chat.isClosed) {
-      this.emit('closed');
-      this.close();
+      this.emit('chatClosed', chatId);
+      this._unsub(chat._id);
     }
   }
 
-  sendMessage(message) {
-    if (this._chatId == null) {
-      return Promise.reject(Error('chat has not been created yet'));
-    }
+  sendMessage(message, chatId) {
     if (this._closed) {
-      return Promise.reject(Error('chat was already closed'));
+      return Promise.reject(Error('client was already closed'));
     }
-    return this._ddp.call('postMessageAsUser', this._chatId, message);
+    return this._ddp.call('postMessageAsUser', chatId, message);
   }
 
-  setUserIsTyping(userIsTyping) {
-    if (this._chatId == null) {
-      return Promise.reject(Error('chat has not been created yet'));
-    }
+  setUserIsTyping(userIsTyping, chatId) {
     if (this._closed) {
-      return Promise.reject(Error('chat was already closed'));
+      return Promise.reject(Error('client was already closed'));
     }
-    return this._ddp.call('setUserIsTyping', this._chatId, userIsTyping);
+    return this._ddp.call('setUserIsTyping', chatId, userIsTyping);
   }
 
   close() {
@@ -150,7 +167,7 @@ class Chat extends EventEmitter {
 
 
 module.exports = {
-  createChat: (options) => new Chat(options),
+  createClient: options => new Client(options),
 
   isAvailable(customerId, team, url, proxy) {
     if (url == null) {
