@@ -144,11 +144,15 @@ class Client extends EventEmitter {
     }
   }
 
-  sendMessage(message, chatId) {
+  sendMessage(message, chatId, attachment) {
     if (this._closed) {
       return Promise.reject(Error('client was already closed'));
     }
-    return this._ddp.call('postMessageAsUser', chatId, message);
+    if (attachment == null) {
+      return this._ddp.call('postMessageAsUser', chatId, message);
+    } else {
+      return this._ddp.call('postMessageAsUser', chatId, message, attachment);
+    }
   }
 
   setUserIsTyping(userIsTyping, chatId) {

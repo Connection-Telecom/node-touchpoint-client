@@ -82,7 +82,7 @@ Close a chat that you previously created.
 
 Promise which resolves to `undefined` once the chat is closed.
 
-### client.sendMessage(message, chatId)
+### client.sendMessage(message, chatId[, attachment])
 
 Send a message to the agent.
 
@@ -91,6 +91,41 @@ Send a message to the agent.
 * `message` *string required*: Message to send.
 * `chatId` *string required*: Chat ID to send the message to.
   Must be one of the chats you created.
+* `attachment` *object*: Optional object to attach to the message. Valid formats are:
+
+    client.sendMessage('Here is a message with attached link', chatId, {
+      type: 'link',
+      url: 'https://github.com/Connection-Telecom/node-touchpoint-client',
+      title: 'Node Touchpoint client'
+    });
+
+    client.sendMessage('Here is a message with attached file', chatId, {
+      type: 'file',
+      url: 'https://example.com/path/to/file.bin',
+      filename: 'file.bin'
+    });
+
+    client.sendMessage('Here is a message with attached image', chatId, {
+      type: 'image',
+      url: 'https://example.com/path/to/image.png'
+    });
+
+    client.sendMessage('Here is a message with attached audio', chatId, {
+      type: 'audio',
+      url: 'https://example.com/path/to/audio.mp3'
+    });
+
+    client.sendMessage('Here is a message with attached video', chatId, {
+      type: 'video',
+      url: 'https://example.com/path/to/video.mp4'
+    });
+
+    client.sendMessage('Here is a message with attached location', chatId, {
+      type: 'location',
+      title: 'Connection Telecom Cape Town office',
+      lat: -33.933986,
+      long: 18.471258
+    });
 
 #### Returns
 
