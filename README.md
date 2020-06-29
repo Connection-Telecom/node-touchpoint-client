@@ -60,6 +60,7 @@ Create a new chat.
 
 * `options.customerId` *string required*: ID of the customer to chat to.
 * `options.team` *string*: Name of the team to chat to, `default` if unspecified
+* `options.channel` *string*: Channel to use, `text` if unspecified. (Only text chat is supported.)
 * `options.topic` *string*: Chat topic.
 * `options.signedContext` *string*: JSON object containing the signed context fields, if necessary
 * `options.signature` *string*: base64-encoded signature of the signed context, if necessary

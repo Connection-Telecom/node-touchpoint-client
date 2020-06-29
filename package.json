@@ -1,6 +1,6 @@
 {
   "name": "touchpoint-client",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Library for acting as a Telviva Touchpoint user",
   "main": "index.js",
   "scripts": {

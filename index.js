@@ -84,6 +84,7 @@ class Client extends EventEmitter {
       signedContext: null,
       signature: null,
       unsignedContext: null,
+      channel: 'text'
     }, options);
 
     if (typeof options.customerId !== 'string') {
@@ -99,7 +100,7 @@ class Client extends EventEmitter {
     }
 
     return this._ddp.call(
-      'createChat', options.customerId, options.topic, options.team, 'text', options.signedContext, options.signature, options.unsignedContext
+      'createChat', options.customerId, options.topic, options.team, options.channel, options.signedContext, options.signature, options.unsignedContext
     ).then(id => {
       const sub = this._ddp.subscribe('userChat', id, true);
       sub.on('ready', () => {
